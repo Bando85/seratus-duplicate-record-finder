@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023. 01. 04. 17:57. Created by Andras Laczo. All rights reserved.
+ */
+
 package andras.laczo.services;
 
 public final class ExcelColumn {

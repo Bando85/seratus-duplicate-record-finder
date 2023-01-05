@@ -1,6 +1,11 @@
+/*
+ * Copyright (c) 2023. 01. 04. 17:57. Created by Andras Laczo. All rights reserved.
+ */
+
 package andras.laczo;
 
 import andras.laczo.services.ExcelWriter;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -8,12 +13,13 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class DuplicateFinderApplication {
 
-    private static final String FILE_WITH_NEW_DATA_PATH = "src/main/resources/newDatasTestFile.xlsx";
-    private static final String FILE_WITH_OLD_DATA_PATH = "src/main/resources/oldDatasTestFile.xlsx";
+    private static final String FILE_WITH_NEW_DATA_PATH = "src/main/resources/NAV_2021Q3_2022Q3_original_withoutDuplicates.xlsx";
+    private static final String FILE_WITH_OLD_DATA_PATH = "src/main/resources/NAV_2021Q2_2022Q2_original.xlsx";
     private static final String OUTPUT_FILE_PATH = "src/main/resources";
     private static XSSFWorkbook fileWithNewData;
     private static XSSFWorkbook fileWithOldData;
@@ -33,16 +39,12 @@ public class DuplicateFinderApplication {
         //fileWithNewData.close();
     }
 
-    private static void initialize() {
-        try {
+    private static void initialize() throws IOException, InvalidFormatException {
 
-            fileWithNewData = new XSSFWorkbook(new File(FILE_WITH_NEW_DATA_PATH));
-            fileWithOldData = new XSSFWorkbook(new File(FILE_WITH_OLD_DATA_PATH));
-            fileWithNewDataLastRowNumber = fileWithNewData.getSheetAt(0).getLastRowNum();
+        fileWithNewData = new XSSFWorkbook(new File(FILE_WITH_NEW_DATA_PATH));
+        fileWithOldData = new XSSFWorkbook(new File(FILE_WITH_OLD_DATA_PATH));
+        fileWithNewDataLastRowNumber = fileWithNewData.getSheetAt(0).getLastRowNum();
 
-        } catch (Exception e) {
-            System.out.println("Exception in intializeFiles!");
-        }
     }
 
     private static void compareHeaders() throws Exception {
@@ -59,7 +61,6 @@ public class DuplicateFinderApplication {
                     headerRowInOld.getCell(i).getStringCellValue()
             )) throw new Exception("Headers dont match!");
         }
-        System.out.println("Headers match!");
     }
 
     private static void setLastCellColNum() {
@@ -68,16 +69,16 @@ public class DuplicateFinderApplication {
 
     private static void markMatchesInNewDataFileByHashCodes(int[] hashCodes) {
         System.out.println("Marking duplicates...");
-        Arrays.sort(hashCodes);
 
         // start from the second row -> i=1
         for (int i = 1; i < fileWithNewDataLastRowNumber + 1; i++) {
             int rowHash;
             rowHash = generateHashCodeOfRow(fileWithNewData.getSheetAt(0).getRow(i));
-            int pos = Arrays.binarySearch(hashCodes,rowHash);
-            if (pos>0) {
+            Arrays.sort(hashCodes);
+            int pos = Arrays.binarySearch(hashCodes, rowHash);
+            if (pos >= 0) {
                 markRow(fileWithNewData.getSheetAt(0).getRow(i));
-                hashCodes[pos]=0;
+                hashCodes[pos] = 0;
             }
         }
         System.out.println("Marking duplicates done!");
@@ -102,10 +103,11 @@ public class DuplicateFinderApplication {
     private static int[] generateHashCodesOfRows(XSSFWorkbook file) {
         System.out.println("Generating hash codes...");
         int lastRowNum = file.getSheetAt(0).getLastRowNum();
-        int[] intArray = new int[lastRowNum];
-        int pos=0;
         // start from the second row -> i=1
-        for (int i = 1; i < lastRowNum; i++) {
+        int[] intArray = new int[lastRowNum];
+        int pos = 0;
+        // start from the second row -> i=1
+        for (int i = 1; i < lastRowNum+1; i++) {
             intArray[pos] = generateHashCodeOfRow(file.getSheetAt(0).getRow(i));
             pos++;
         }
@@ -125,7 +127,7 @@ public class DuplicateFinderApplication {
         System.out.println("Saving to workbook...");
         ExcelWriter.initialize(OUTPUT_FILE_PATH);
         for (int i = 0; i < fileWithNewDataLastRowNumber + 1; i++) {
-            ExcelWriter.putData(fileWithNewData.getSheetAt(0).getRow(i),i);
+            ExcelWriter.putDataToSXSSFWorkbook(fileWithNewData.getSheetAt(0).getRow(i), i);
         }
         ExcelWriter.saveWorkbook();
         System.out.println("Done!");

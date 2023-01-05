@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023. 01. 04. 17:57. Created by Andras Laczo. All rights reserved.
+ */
+
 package andras.laczo.services;
 
 import org.apache.poi.ss.usermodel.CellType;
@@ -21,7 +25,7 @@ public class ExcelWriter {
         myWorkbook.createSheet();
     }
 
-    public static void putData(XSSFRow xssfRow, int rowNumber) {
+    public static void putDataToSXSSFWorkbook(XSSFRow xssfRow, int rowNumber) {
         Integer starterColPos = 0;
         SXSSFSheet newSXSSFSheet = myWorkbook.getSheetAt(0);
         SXSSFRow newSXSSFRow = newSXSSFSheet.createRow(rowNumber);
